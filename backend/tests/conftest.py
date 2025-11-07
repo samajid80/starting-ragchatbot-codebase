@@ -308,3 +308,96 @@ def mock_config():
     config.CHROMA_PATH = "./test_chroma_db"
 
     return config
+
+
+# ============================================================================
+# FASTAPI TESTING FIXTURES
+# ============================================================================
+
+@pytest.fixture
+def mock_rag_system():
+    """Mock RAGSystem for API testing"""
+    mock_rag = Mock()
+
+    # Mock session manager
+    mock_session_manager = Mock()
+    mock_session_manager.create_session.return_value = "session_1"
+    mock_rag.session_manager = mock_session_manager
+
+    # Mock query method
+    mock_rag.query.return_value = (
+        "MCP (Model Context Protocol) is a protocol that allows AI to access external tools.",
+        [Source(title="Introduction to MCP Servers - Lesson 1", url="https://example.com/mcp/lesson1")]
+    )
+
+    # Mock analytics method
+    mock_rag.get_course_analytics.return_value = {
+        "total_courses": 1,
+        "course_titles": ["Introduction to MCP Servers"]
+    }
+
+    return mock_rag
+
+
+@pytest.fixture
+def test_client(mock_rag_system):
+    """FastAPI TestClient with mocked RAG system"""
+    from fastapi.testclient import TestClient
+    from fastapi import FastAPI, HTTPException
+    from pydantic import BaseModel
+    from typing import List, Optional
+
+    # Import models from the app
+    from models import Source
+
+    # Create a test app without static file mounting to avoid import issues
+    test_app = FastAPI(title="Test RAG System")
+
+    # Define request/response models inline
+    class QueryRequest(BaseModel):
+        query: str
+        session_id: Optional[str] = None
+
+    class QueryResponse(BaseModel):
+        answer: str
+        sources: List[Source]
+        session_id: str
+
+    class CourseStats(BaseModel):
+        total_courses: int
+        course_titles: List[str]
+
+    # Define test endpoints
+    @test_app.post("/api/query", response_model=QueryResponse)
+    async def query_documents(request: QueryRequest):
+        try:
+            session_id = request.session_id
+            if not session_id:
+                session_id = mock_rag_system.session_manager.create_session()
+
+            answer, sources = mock_rag_system.query(request.query, session_id)
+
+            return QueryResponse(
+                answer=answer,
+                sources=sources,
+                session_id=session_id
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @test_app.get("/api/courses", response_model=CourseStats)
+    async def get_course_stats():
+        try:
+            analytics = mock_rag_system.get_course_analytics()
+            return CourseStats(
+                total_courses=analytics["total_courses"],
+                course_titles=analytics["course_titles"]
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @test_app.get("/")
+    async def root():
+        return {"message": "RAG System API"}
+
+    return TestClient(test_app)
