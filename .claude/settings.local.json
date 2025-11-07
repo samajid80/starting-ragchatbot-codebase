@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(test:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(uv add:*)",
+      "Bash(uv run pytest:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
