@@ -32,7 +32,38 @@ uv run uvicorn app:app --reload --port 8000
 **Access:** Web UI at http://localhost:8000, API docs at http://localhost:8000/docs
 
 ### Testing
-No test suite currently exists. The codebase has no pytest configuration or test files.
+```bash
+# Run all tests
+uv run pytest backend/tests/
+
+# Run with coverage
+uv run pytest backend/tests/ --cov=backend
+```
+
+### Code Quality
+The project includes comprehensive code quality tools configured and ready to use:
+
+```bash
+# Format code (black + isort)
+scripts/format.sh       # Linux/Mac
+scripts\format.bat      # Windows
+
+# Run all quality checks (formatting, imports, linting, type checking)
+scripts/check-all.sh    # Linux/Mac
+scripts\check-all.bat   # Windows
+
+# Individual checks
+scripts/lint.sh         # Flake8 linting
+scripts/typecheck.sh    # Mypy type checking
+```
+
+**Configured Tools:**
+- **black** (v25.9.0+): Auto-formatter with 88 char line length
+- **isort** (v7.0.0+): Import sorter, black-compatible profile
+- **flake8** (v7.3.0+): Linter for style consistency
+- **mypy** (v1.18.2+): Static type checker
+
+All configurations are in `pyproject.toml` and `.flake8`. See `scripts/README.md` for detailed usage.
 
 ## Architecture
 

@@ -7,7 +7,11 @@
       "mcp__playwright__browser_navigate",
       "mcp__playwright__browser_take_screenshot",
       "Bash(uv add:*)",
-      "Bash(uv run pytest:*)"
+      "Bash(uv run pytest:*)",
+      "Bash(uv run black:*)",
+      "Bash(uv run:*)",
+      "Bash(scriptscheck-all.bat)",
+      "Bash(cmd /c \"scripts\\check-all.bat\")"
     ],
     "deny": [],
     "ask": []

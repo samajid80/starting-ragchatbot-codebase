@@ -3,22 +3,25 @@ Tests for CourseSearchTool in search_tools.py
 Focus: Testing the execute() method with various scenarios
 """
 
-import pytest
-from unittest.mock import Mock, patch
-import sys
 import os
+import sys
+from unittest.mock import Mock, patch
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+import pytest
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from models import Source
 from search_tools import CourseSearchTool, ToolManager
 from vector_store import SearchResults
-from models import Source
 
 
 class TestCourseSearchToolExecute:
     """Test CourseSearchTool.execute() method"""
 
-    def test_execute_happy_path_no_filters(self, mock_vector_store, sample_search_results):
+    def test_execute_happy_path_no_filters(
+        self, mock_vector_store, sample_search_results
+    ):
         """Test successful search without course or lesson filters"""
         # Arrange
         tool = CourseSearchTool(mock_vector_store)
@@ -33,12 +36,12 @@ class TestCourseSearchToolExecute:
         assert "Introduction to MCP Servers" in result
         assert "This is the introduction" in result
         mock_vector_store.search.assert_called_once_with(
-            query="What is MCP?",
-            course_name=None,
-            lesson_number=None
+            query="What is MCP?", course_name=None, lesson_number=None
         )
 
-    def test_execute_happy_path_with_course_filter(self, mock_vector_store, sample_search_results):
+    def test_execute_happy_path_with_course_filter(
+        self, mock_vector_store, sample_search_results
+    ):
         """Test successful search with course name filter"""
         # Arrange
         tool = CourseSearchTool(mock_vector_store)
@@ -51,12 +54,12 @@ class TestCourseSearchToolExecute:
         assert result is not None
         assert "Introduction to MCP Servers" in result
         mock_vector_store.search.assert_called_once_with(
-            query="What is MCP?",
-            course_name="Introduction to MCP",
-            lesson_number=None
+            query="What is MCP?", course_name="Introduction to MCP", lesson_number=None
         )
 
-    def test_execute_happy_path_with_lesson_filter(self, mock_vector_store, sample_search_results):
+    def test_execute_happy_path_with_lesson_filter(
+        self, mock_vector_store, sample_search_results
+    ):
         """Test successful search with lesson number filter"""
         # Arrange
         tool = CourseSearchTool(mock_vector_store)
@@ -69,12 +72,12 @@ class TestCourseSearchToolExecute:
         assert result is not None
         assert "Lesson 1" in result
         mock_vector_store.search.assert_called_once_with(
-            query="What is MCP?",
-            course_name=None,
-            lesson_number=1
+            query="What is MCP?", course_name=None, lesson_number=1
         )
 
-    def test_execute_happy_path_with_both_filters(self, mock_vector_store, sample_search_results):
+    def test_execute_happy_path_with_both_filters(
+        self, mock_vector_store, sample_search_results
+    ):
         """Test successful search with both course and lesson filters"""
         # Arrange
         tool = CourseSearchTool(mock_vector_store)
@@ -82,9 +85,7 @@ class TestCourseSearchToolExecute:
 
         # Act
         result = tool.execute(
-            query="What is MCP?",
-            course_name="Introduction to MCP",
-            lesson_number=1
+            query="What is MCP?", course_name="Introduction to MCP", lesson_number=1
         )
 
         # Assert
@@ -92,9 +93,7 @@ class TestCourseSearchToolExecute:
         assert "Introduction to MCP Servers" in result
         assert "Lesson 1" in result
         mock_vector_store.search.assert_called_once_with(
-            query="What is MCP?",
-            course_name="Introduction to MCP",
-            lesson_number=1
+            query="What is MCP?", course_name="Introduction to MCP", lesson_number=1
         )
 
     def test_execute_error_course_not_found(self, mock_vector_store_error):
@@ -121,7 +120,9 @@ class TestCourseSearchToolExecute:
         assert result is not None
         assert "No relevant content found" in result
 
-    def test_execute_error_empty_results_with_course_filter(self, mock_vector_store_empty):
+    def test_execute_error_empty_results_with_course_filter(
+        self, mock_vector_store_empty
+    ):
         """Test empty results message includes course name when filtered"""
         # Arrange
         tool = CourseSearchTool(mock_vector_store_empty)
@@ -134,7 +135,9 @@ class TestCourseSearchToolExecute:
         assert "No relevant content found" in result
         assert "Introduction to MCP" in result
 
-    def test_execute_error_empty_results_with_lesson_filter(self, mock_vector_store_empty):
+    def test_execute_error_empty_results_with_lesson_filter(
+        self, mock_vector_store_empty
+    ):
         """Test empty results message includes lesson number when filtered"""
         # Arrange
         tool = CourseSearchTool(mock_vector_store_empty)
@@ -152,7 +155,9 @@ class TestCourseSearchToolExecute:
         # Arrange
         tool = CourseSearchTool(mock_vector_store)
         mock_vector_store.search.return_value = sample_search_results
-        mock_vector_store.get_lesson_link.return_value = "https://example.com/mcp/lesson1"
+        mock_vector_store.get_lesson_link.return_value = (
+            "https://example.com/mcp/lesson1"
+        )
 
         # Act
         result = tool.execute(query="What is MCP?")
@@ -164,7 +169,9 @@ class TestCourseSearchToolExecute:
         assert tool.last_sources[0].title == "Introduction to MCP Servers - Lesson 1"
         assert tool.last_sources[0].url == "https://example.com/mcp/lesson1"
 
-    def test_execute_source_tracking_without_lesson_link(self, mock_vector_store, sample_search_results):
+    def test_execute_source_tracking_without_lesson_link(
+        self, mock_vector_store, sample_search_results
+    ):
         """Test source tracking when lesson link is not available"""
         # Arrange
         tool = CourseSearchTool(mock_vector_store)
@@ -260,7 +267,9 @@ class TestToolManager:
         tool = CourseSearchTool(mock_vector_store)
         manager.register_tool(tool)
         mock_vector_store.search.return_value = sample_search_results
-        mock_vector_store.get_lesson_link.return_value = "https://example.com/mcp/lesson1"
+        mock_vector_store.get_lesson_link.return_value = (
+            "https://example.com/mcp/lesson1"
+        )
 
         # Execute a search to generate sources
         manager.execute_tool("search_course_content", query="What is MCP?")
@@ -279,7 +288,9 @@ class TestToolManager:
         tool = CourseSearchTool(mock_vector_store)
         manager.register_tool(tool)
         mock_vector_store.search.return_value = sample_search_results
-        mock_vector_store.get_lesson_link.return_value = "https://example.com/mcp/lesson1"
+        mock_vector_store.get_lesson_link.return_value = (
+            "https://example.com/mcp/lesson1"
+        )
 
         # Execute a search to generate sources
         manager.execute_tool("search_course_content", query="What is MCP?")
@@ -300,7 +311,9 @@ class TestCourseSearchToolFormatResults:
         # Arrange
         tool = CourseSearchTool(mock_vector_store)
         mock_vector_store.search.return_value = sample_search_results
-        mock_vector_store.get_lesson_link.return_value = "https://example.com/mcp/lesson1"
+        mock_vector_store.get_lesson_link.return_value = (
+            "https://example.com/mcp/lesson1"
+        )
 
         # Act
         result = tool.execute(query="What is MCP?")
@@ -319,9 +332,9 @@ class TestCourseSearchToolFormatResults:
             metadata=[
                 {"course_title": "Course A", "lesson_number": 1},
                 {"course_title": "Course A", "lesson_number": 2},
-                {"course_title": "Course B", "lesson_number": 1}
+                {"course_title": "Course B", "lesson_number": 1},
             ],
-            distances=[0.1, 0.2, 0.3]
+            distances=[0.1, 0.2, 0.3],
         )
         mock_vector_store.search.return_value = multi_results
         mock_vector_store.get_lesson_link.return_value = "https://example.com/lesson"

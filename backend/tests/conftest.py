@@ -3,22 +3,23 @@ Pytest fixtures and mocks for RAG chatbot testing.
 Provides mock components to isolate unit tests.
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
-from typing import List, Dict, Any
-import sys
 import os
+import sys
+from typing import Any, Dict, List
+from unittest.mock import MagicMock, Mock
+
+import pytest
 
 # Add backend to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from models import Source, Lesson, Course, CourseChunk
+from models import Course, CourseChunk, Lesson, Source
 from vector_store import SearchResults
-
 
 # ============================================================================
 # SAMPLE DATA FIXTURES
 # ============================================================================
+
 
 @pytest.fixture
 def sample_course():
@@ -28,10 +29,22 @@ def sample_course():
         course_link="https://example.com/mcp",
         instructor="John Doe",
         lessons=[
-            Lesson(lesson_number=1, title="Getting Started", lesson_link="https://example.com/mcp/lesson1"),
-            Lesson(lesson_number=2, title="Advanced Features", lesson_link="https://example.com/mcp/lesson2"),
-            Lesson(lesson_number=3, title="Best Practices", lesson_link="https://example.com/mcp/lesson3")
-        ]
+            Lesson(
+                lesson_number=1,
+                title="Getting Started",
+                lesson_link="https://example.com/mcp/lesson1",
+            ),
+            Lesson(
+                lesson_number=2,
+                title="Advanced Features",
+                lesson_link="https://example.com/mcp/lesson2",
+            ),
+            Lesson(
+                lesson_number=3,
+                title="Best Practices",
+                lesson_link="https://example.com/mcp/lesson3",
+            ),
+        ],
     )
 
 
@@ -43,20 +56,20 @@ def sample_chunks():
             content="Lesson 1 content: This is the introduction to MCP servers.",
             course_title="Introduction to MCP Servers",
             lesson_number=1,
-            chunk_index=0
+            chunk_index=0,
         ),
         CourseChunk(
             content="This lesson covers the basics of MCP protocol.",
             course_title="Introduction to MCP Servers",
             lesson_number=1,
-            chunk_index=1
+            chunk_index=1,
         ),
         CourseChunk(
             content="Lesson 2 content: Advanced MCP features include context sharing.",
             course_title="Introduction to MCP Servers",
             lesson_number=2,
-            chunk_index=2
-        )
+            chunk_index=2,
+        ),
     ]
 
 
@@ -66,24 +79,28 @@ def sample_search_results():
     return SearchResults(
         documents=[
             "This is the introduction to MCP servers.",
-            "MCP protocol allows AI to access external tools."
+            "MCP protocol allows AI to access external tools.",
         ],
         metadata=[
-            {"course_title": "Introduction to MCP Servers", "lesson_number": 1, "chunk_index": 0},
-            {"course_title": "Introduction to MCP Servers", "lesson_number": 1, "chunk_index": 1}
+            {
+                "course_title": "Introduction to MCP Servers",
+                "lesson_number": 1,
+                "chunk_index": 0,
+            },
+            {
+                "course_title": "Introduction to MCP Servers",
+                "lesson_number": 1,
+                "chunk_index": 1,
+            },
         ],
-        distances=[0.15, 0.23]
+        distances=[0.15, 0.23],
     )
 
 
 @pytest.fixture
 def empty_search_results():
     """Sample empty search results"""
-    return SearchResults(
-        documents=[],
-        metadata=[],
-        distances=[]
-    )
+    return SearchResults(documents=[], metadata=[], distances=[])
 
 
 @pytest.fixture
@@ -93,13 +110,14 @@ def error_search_results():
         documents=[],
         metadata=[],
         distances=[],
-        error="No course found matching 'Nonexistent Course'"
+        error="No course found matching 'Nonexistent Course'",
     )
 
 
 # ============================================================================
 # MOCK VECTOR STORE FIXTURES
 # ============================================================================
+
 
 @pytest.fixture
 def mock_vector_store(sample_search_results):
@@ -144,7 +162,7 @@ def mock_vector_store_error():
         documents=[],
         metadata=[],
         distances=[],
-        error="No course found matching 'Nonexistent Course'"
+        error="No course found matching 'Nonexistent Course'",
     )
     mock_store.search.return_value = error_results
     mock_store._resolve_course_name.return_value = None
@@ -155,6 +173,7 @@ def mock_vector_store_error():
 # ============================================================================
 # MOCK CLAUDE API CLIENT FIXTURES
 # ============================================================================
+
 
 @pytest.fixture
 def mock_claude_response_no_tool():
@@ -183,7 +202,7 @@ def mock_claude_response_with_tool():
     mock_tool_use.id = "tool_use_123"
     mock_tool_use.input = {
         "query": "What is MCP?",
-        "course_name": "Introduction to MCP Servers"
+        "course_name": "Introduction to MCP Servers",
     }
 
     mock_response.content = [mock_tool_use]
@@ -216,7 +235,9 @@ def mock_claude_client(mock_claude_response_no_tool, mock_claude_final_response)
 
 
 @pytest.fixture
-def mock_claude_client_with_tools(mock_claude_response_with_tool, mock_claude_final_response):
+def mock_claude_client_with_tools(
+    mock_claude_response_with_tool, mock_claude_final_response
+):
     """Mock Claude client that uses tools"""
     mock_client = Mock()
 
@@ -224,7 +245,7 @@ def mock_claude_client_with_tools(mock_claude_response_with_tool, mock_claude_fi
     # Second call: final response
     mock_client.messages.create.side_effect = [
         mock_claude_response_with_tool,
-        mock_claude_final_response
+        mock_claude_final_response,
     ]
 
     return mock_client
@@ -233,6 +254,7 @@ def mock_claude_client_with_tools(mock_claude_response_with_tool, mock_claude_fi
 # ============================================================================
 # MOCK TOOL MANAGER FIXTURES
 # ============================================================================
+
 
 @pytest.fixture
 def mock_tool_manager():
@@ -249,10 +271,10 @@ def mock_tool_manager():
                 "properties": {
                     "query": {"type": "string"},
                     "course_name": {"type": "string"},
-                    "lesson_number": {"type": "integer"}
+                    "lesson_number": {"type": "integer"},
                 },
-                "required": ["query"]
-            }
+                "required": ["query"],
+            },
         }
     ]
 
@@ -261,7 +283,10 @@ def mock_tool_manager():
 
     # Mock sources
     mock_manager.get_last_sources.return_value = [
-        Source(title="Introduction to MCP Servers - Lesson 1", url="https://example.com/mcp/lesson1")
+        Source(
+            title="Introduction to MCP Servers - Lesson 1",
+            url="https://example.com/mcp/lesson1",
+        )
     ]
 
     mock_manager.reset_sources.return_value = None
@@ -273,6 +298,7 @@ def mock_tool_manager():
 # MOCK SESSION MANAGER FIXTURES
 # ============================================================================
 
+
 @pytest.fixture
 def mock_session_manager():
     """Mock SessionManager"""
@@ -282,7 +308,9 @@ def mock_session_manager():
     mock_manager.create_session.return_value = "session_1"
 
     # Mock conversation history
-    mock_manager.get_conversation_history.return_value = "User: Previous question\nAssistant: Previous answer"
+    mock_manager.get_conversation_history.return_value = (
+        "User: Previous question\nAssistant: Previous answer"
+    )
 
     # Mock add exchange
     mock_manager.add_exchange.return_value = None
@@ -293,6 +321,7 @@ def mock_session_manager():
 # ============================================================================
 # MOCK CONFIG FIXTURE
 # ============================================================================
+
 
 @pytest.fixture
 def mock_config():
