@@ -1,6 +1,11 @@
 from typing import List, Dict, Optional
 from pydantic import BaseModel
 
+class Source(BaseModel):
+    """Represents a source citation with optional link"""
+    title: str                        # Display text for the source (e.g., "Course Name - Lesson 1")
+    url: Optional[str] = None         # URL link to the lesson video (None if not available)
+
 class Lesson(BaseModel):
     """Represents a lesson within a course"""
     lesson_number: int  # Sequential lesson number (1, 2, 3, etc.)

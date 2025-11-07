@@ -244,3 +244,4 @@ System prompt in `AIGenerator.SYSTEM_PROMPT` (line 8-30 of `ai_generator.py`) co
 - always use uv to run the server do not use pip directly
 - make sure to use uv to manage all dependencies
 - use uv to run python files
+- don't run the server using ./run.sh I will start myself

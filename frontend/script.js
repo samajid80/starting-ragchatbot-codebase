@@ -5,7 +5,7 @@ const API_URL = '/api';
 let currentSessionId = null;
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles;
+let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,7 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     sendButton = document.getElementById('sendButton');
     totalCourses = document.getElementById('totalCourses');
     courseTitles = document.getElementById('courseTitles');
-    
+    newChatButton = document.getElementById('newChatButton');
+
     setupEventListeners();
     createNewSession();
     loadCourseStats();
@@ -28,8 +29,10 @@ function setupEventListeners() {
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-    
-    
+
+    // New chat button
+    newChatButton.addEventListener('click', handleNewChat);
+
     // Suggested questions
     document.querySelectorAll('.suggested-item').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -122,10 +125,26 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     let html = `<div class="message-content">${displayContent}</div>`;
     
     if (sources && sources.length > 0) {
+        // Format sources as individual badges - handle both new format (objects with url) and old format (strings)
+        const formattedSources = sources.map(source => {
+            // New format: source is an object with title and optional url
+            if (typeof source === 'object' && source.title) {
+                if (source.url) {
+                    // Render as clickable badge that opens in new tab
+                    return `<a href="${escapeHtml(source.url)}" class="source-badge source-badge-link" target="_blank" rel="noopener noreferrer">${escapeHtml(source.title)}</a>`;
+                } else {
+                    // No URL available, render as non-clickable badge
+                    return `<span class="source-badge source-badge-text">${escapeHtml(source.title)}</span>`;
+                }
+            }
+            // Old format: source is a plain string (backward compatibility)
+            return `<span class="source-badge source-badge-text">${escapeHtml(source)}</span>`;
+        }).join('');
+
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <div class="sources-content">${formattedSources}</div>
             </details>
         `;
     }
@@ -150,6 +169,21 @@ async function createNewSession() {
     currentSessionId = null;
     chatMessages.innerHTML = '';
     addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
+}
+
+// Handle new chat button click
+function handleNewChat() {
+    // Confirm if there's an existing conversation
+    if (currentSessionId && chatMessages.children.length > 1) {
+        const confirmed = confirm('Start a new chat? Your current conversation will be cleared.');
+        if (!confirmed) return;
+    }
+
+    // Create new session (resets session ID and clears chat)
+    createNewSession();
+
+    // Focus on input for immediate typing
+    chatInput.focus();
 }
 
 // Load course statistics
